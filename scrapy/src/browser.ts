@@ -2,12 +2,16 @@ import { Browser, BrowserContext, Route, Request as PlaywrightRequest, Page } fr
 import UserAgent from 'user-agents';
 import { chromium } from 'playwright-extra';
 import StealthPlugin from "puppeteer-extra-plugin-stealth"
+import { getProxyIp } from './proxy';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const BLOCK_MEDIA = (process.env.BLOCK_MEDIA || 'False').toUpperCase() === 'TRUE';
 const PROXY_SERVER = process.env.PROXY_SERVER || null;
 const PROXY_USERNAME = process.env.PROXY_USERNAME || null;
 const PROXY_PASSWORD = process.env.PROXY_PASSWORD || null;
-const HEADLESS = (process.env.HEADLESS || 'True').toUpperCase() === 'TRUE';
+const HEADLESS = (process.env.HEADLESS || 'True').toUpperCase() === 'FALSE';
 
 const AD_SERVING_DOMAINS = [
   'doubleclick.net',
@@ -25,6 +29,9 @@ const AD_SERVING_DOMAINS = [
   'amazon-adsystem.com'
 ];
 
+
+const PROXY_IP = '61.184.8.27:40682'
+console.log(PROXY_IP, PROXY_USERNAME, PROXY_PASSWORD)
 interface UrlModel {
   url: string;
   wait_after_load?: number;
@@ -43,11 +50,18 @@ chromium.use(StealthPlugin())
 const ensureBrowserInitialized = async () => {
   if (initializationPromise) return initializationPromise;
   if (initialized) return Promise.resolve();
+  const proxy = PROXY_IP || await getProxyIp();
+
 
   initializationPromise = (async () => {
     console.log('🌐 正在初始化浏览器...');
     browser = await chromium.launch({
       headless: HEADLESS,
+      proxy: {
+        server: proxy,
+        username: PROXY_USERNAME || '',
+        password: PROXY_PASSWORD || '',
+      },
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox', 

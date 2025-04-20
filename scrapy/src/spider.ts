@@ -27,8 +27,7 @@ const DETAIL_TIMEOUT = 60000;
 const DETAIL_SELECTOR = {
   waitForItems: 'h1',
   title: 'h1',
-  content: ['_j_content_box'],
-  attachments: 'a',
+  content: ['._j_content_box'],
 }
 
 const MafengwoListSpider = async () => {
