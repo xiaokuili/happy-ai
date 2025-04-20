@@ -1,0 +1,9 @@
+scrapy/node_modules/*
+scrapy/dist/*
+scrapy/build/*
+scrapy/coverage/*
+scrapy/logs/*
+scrapy/temp/*
+
+
+
