@@ -28,8 +28,10 @@
   },
   "dependencies": {
     "@libsql/client": "^0.15.4",
+    "@mendable/firecrawl-js": "^1.24.0",
     "@types/axios": "^0.9.36",
     "axios": "^1.8.4",
+    "cheerio": "^1.0.0",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.42.0",
     "playwright-extra": "^4.3.6",

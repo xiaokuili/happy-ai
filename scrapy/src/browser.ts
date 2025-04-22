@@ -11,7 +11,7 @@ const BLOCK_MEDIA = (process.env.BLOCK_MEDIA || 'False').toUpperCase() === 'TRUE
 const PROXY_SERVER = process.env.PROXY_SERVER || null;
 const PROXY_USERNAME = process.env.PROXY_USERNAME || null;
 const PROXY_PASSWORD = process.env.PROXY_PASSWORD || null;
-const HEADLESS = (process.env.HEADLESS || 'True').toUpperCase() === 'FALSE';
+const HEADLESS = (process.env.HEADLESS || 'True').toUpperCase() === 'TRUE';
 
 const AD_SERVING_DOMAINS = [
   'doubleclick.net',
@@ -50,18 +50,18 @@ chromium.use(StealthPlugin())
 const ensureBrowserInitialized = async () => {
   if (initializationPromise) return initializationPromise;
   if (initialized) return Promise.resolve();
-  const proxy = PROXY_IP || await getProxyIp();
+  // const proxy = PROXY_IP || await getProxyIp();
 
 
   initializationPromise = (async () => {
     console.log('🌐 正在初始化浏览器...');
     browser = await chromium.launch({
       headless: HEADLESS,
-      proxy: {
-        server: proxy,
-        username: PROXY_USERNAME || '',
-        password: PROXY_PASSWORD || '',
-      },
+      // proxy: {
+      //   server: proxy,
+      //   username: PROXY_USERNAME || '',
+      //   password: PROXY_PASSWORD || '',
+      // },
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox', 
@@ -174,7 +174,5 @@ const scrapePage = async (page: Page, url: string, waitUntil: 'load' | 'networki
   };
 };
 
-// 立即开始初始化过程
-ensureBrowserInitialized();
 
 export { getBrowser, createPage, scrapePage, shutdownBrowser };
