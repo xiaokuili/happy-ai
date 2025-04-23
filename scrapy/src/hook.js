@@ -1,27 +1,12 @@
-// 反debugger
-(function() {
-    const originalFunction = Function.prototype.constructor;
-    
-    Function.prototype.constructor = function() {
-        let args = Array.from(arguments);
-        let functionBody = args.pop();
-        
-        if (typeof functionBody === 'string') {
-            // 移除所有的 debugger 语句
-            functionBody = functionBody.replace(/debugger/g, '');
-        }
-        
-        args.push(functionBody);
-        return originalFunction.apply(this, args);
-    };
-    
-    // 为了安全起见，也处理 eval
-    const originalEval = window.eval;
-    window.eval = function(code) {
-        if (typeof code === 'string') {
-            // 移除所有的 debugger 语句
-            code = code.replace(/debugger/g, '');
-        }
-        return originalEval(code);
-    };
-})();
+
+
+// 先保留原 constructor
+Function.prototype.constructor_ = Function.prototype.constructor;
+Function.prototype.constructor = function (a) {
+    // 如果参数为 debugger，就返回空方法
+    if(a == "debugger") {
+        return function (){};
+    }
+    // 如果参数不为 debugger，还是返回原方法
+    return Function.prototype.constructor_(a);
+};

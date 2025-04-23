@@ -1,34 +1,43 @@
-import { getLastUrl, saveList, getListByStatus, updateListStatus, saveDetail } from "./db";
-import FireCrawlApp from '@mendable/firecrawl-js';
-import dotenv from 'dotenv';
+import fetch from 'node-fetch';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as cheerio from 'cheerio';
 
-dotenv.config();
+import dotenv from 'dotenv';
 
+import { getLastUrl, saveList, getListByStatus, updateListStatus, saveDetail } from "./db";
+import {  proxyUrl } from "./proxy";
+import { cookies }  from "./cookies";
+import { Status } from "./cons";
+
+
+
+dotenv.config();
+// base config 
 const URL = 'https://www.mafengwo.cn/gonglve/';
 const WEBSITE_NAME = '马蜂窝';
-const TIMEOUT = 5000;
 
-// list config 
+// proxy 
+let proxyAgent: HttpsProxyAgent<string>;
+if (proxyUrl !== "") {
+  proxyAgent = new HttpsProxyAgent(proxyUrl);
+}
+
+// spider list config 
 const MAX_PAGE = 30;
 
 const ListSelector = {
-  waitForItems: '.gl-post',
   items: '.feed-item',
   title: '.title',
   href: 'a',
 }
 
-// detail config
-const PER_LIMIT_NUM = 2;
-const TOTAL_NUM = 2;
-const DETAIL_TIMEOUT = 60000;
-
+// spider detail config
 const DETAIL_SELECTOR = {
-  waitForItems: 'h1',
   title: 'h1',
   content: ['._j_content_box'],
 }
+
+
 
 const MafengwoListSpider = async () => {
   console.log('🕷️ 开始爬取列表页...');
@@ -43,6 +52,7 @@ const MafengwoListSpider = async () => {
     
     const response = await fetch(URL, {
       method: 'POST',
+      agent: proxyAgent,
       headers: {
         'accept': '*/*',
         'accept-language': 'en,zh-CN;q=0.9,zh;q=0.8',
@@ -58,9 +68,9 @@ const MafengwoListSpider = async () => {
         'sec-fetch-site': 'same-origin',
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
         'x-requested-with': 'XMLHttpRequest',
-        'cookie': 'PHPSESSID=gdjbnp9qrddl3j7d6kqnl4ch35; mfw_uuid=6807053a-c114-ba6a-a446-4f00496594c3; oad_n=a%3A3%3A%7Bs%3A3%3A%22oid%22%3Bi%3A1029%3Bs%3A2%3A%22dm%22%3Bs%3A15%3A%22www.mafengwo.cn%22%3Bs%3A2%3A%22ft%22%3Bs%3A19%3A%222025-04-22+10%3A55%3A54%22%3B%7D; __mfwc=direct; Hm_lvt_8288b2ed37e5bc9b4c9f7008798d2de0=1745290558; HMACCOUNT=0221A67C8D535281; uva=s%3A92%3A%22a%3A3%3A%7Bs%3A2%3A%22lt%22%3Bi%3A1745290557%3Bs%3A10%3A%22last_refer%22%3Bs%3A24%3A%22https%3A%2F%2Fwww.mafengwo.cn%2F%22%3Bs%3A5%3A%22rhost%22%3BN%3B%7D%22%3B; __mfwurd=a%3A3%3A%7Bs%3A6%3A%22f_time%22%3Bi%3A1745290557%3Bs%3A9%3A%22f_rdomain%22%3Bs%3A15%3A%22www.mafengwo.cn%22%3Bs%3A6%3A%22f_host%22%3Bs%3A3%3A%22www%22%3B%7D; __mfwuuid=6807053a-c114-ba6a-a446-4f00496594c3; bottom_ad_status=0; __omc_chl=; __omc_r=; __mfwa=1745290556206.23964.4.1745305385881.1745314352503; __mfwlv=1745314352; __mfwvn=3; __mfwb=32fec600defd.5.direct; __mfwlt=1745314562; Hm_lpvt_8288b2ed37e5bc9b4c9f7008798d2de0=1745314565; w_tsfp=ltvuV0MF2utBvS0Q7a/qlU6mHjAlcD04h0wpEaR0f5thQLErU5mB1IV7u8P/OHHf5sxnvd7DsZoyJTLYCJI3dwNHR8jDcNhFjwjDmoQtit0UVBRiRZjbC1VMIb4j7TVCeHhCNxS00jA8eIUd379yilkMsyN1zap3TO14fstJ019E6KDQmI5uDW3HlFWQRzaLbjcMcuqPr6g18L5a5WuP4VL7Ll5yUb1B1hGWhnsXCXt25ES7d7pVMxyqcMitSqA='
+        'cookie': cookies
       },
-      body: `page=${page}`
+      body: `page=${page}`,
     });
 
     const html = await response.text();
@@ -106,32 +116,93 @@ const MafengwoListSpider = async () => {
   console.log(`✅ 列表爬取完成，共爬取 ${urls.length} 条数据`);
 }
 
+
 const MafengwoDetailSpider = async () => {
+  console.log('🕷️ 开始爬取详情页...');
 
-  const app = new FireCrawlApp({apiKey: process.env.FIRECRAWL_API_KEY || ''});
+ 
+  let failedCount = 0;
+  let successCount = 0;
+  outerLoop: while (true) {
+    let items = await getListByStatus(Status.pending);
+    console.log(`📑 待处理详情页数量: ${items.length}`);
 
-  const scrapeResult = await app.scrapeUrl("https://www.mafengwo.cn/i/11891906.html", {
-    formats: [ "markdown" ],
-    actions: [
-      {
-        type: 'executeJavascript',
-        script: 'window.scrollTo(0, document.body.scrollHeight);'
-      },
-      {
-        type: 'wait',
-        milliseconds: 3000,
-      },
-      {
-        type: 'executeJavascript',
-        script: 'window.scrollTo(0, document.body.scrollHeight);'
-      },
-      {
-        type: 'wait',
-        milliseconds: 3000,
-      },
-    ]
-  });
-  console.log(scrapeResult);
+    if (items.length === 0) {
+      console.log('✅ 没有待处理的详情页');
+      break outerLoop;
+    }
+    for (const item of items) {
+      try {
+        console.log(`🔍 正在处理: ${item.detailUrl}`);
+      
+        const response = await fetch(item.detailUrl, {
+          // agent: proxyAgent,
+          headers: {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'accept-language': 'en,zh-CN;q=0.9,zh;q=0.8',
+            'cache-control': 'max-age=0',
+            'priority': 'u=0, i',
+            'referer': item.detailUrl,
+            'sec-ch-ua': '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"macOS"',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'same-origin',
+            'upgrade-insecure-requests': '1',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+            'cookie': cookies
+          }
+        });
+
+        const html = await response.text();
+        const $ = cheerio.load(html);
+
+        // 获取标题
+        const title = $(DETAIL_SELECTOR.title).text().trim();
+        
+        // 获取内容
+        let content = '';
+        for (const selector of DETAIL_SELECTOR.content) {
+          const contentElement = $(selector);
+          if (contentElement.length > 0) {
+            content = contentElement.html() || '';
+            break;
+          }
+        }
+
+        // 获取图片
+        const attachments = $('img')
+          .map((_, el) => $(el).attr('data-src'))
+          .get()
+          .filter(src => src && src.length > 0);
+
+        console.log(`💾 存储详情: ${title}`);
+        await saveDetail({
+          title,
+          content: content || 'css选择器错误，请检查',
+          url: item.detailUrl,
+          attachments: JSON.stringify(attachments),
+        });
+
+        await updateListStatus(item.detailUrl, Status.success);
+        console.log(`✅ 处理成功: ${item.detailUrl}`);
+        successCount++;
+      } catch (error) {
+        console.error(`❌ 处理失败: ${item.detailUrl}`, error);
+        await updateListStatus(item.detailUrl, Status.failed);
+        failedCount++;
+      }
+      await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000));
+      if (failedCount > 10) {
+        break outerLoop;
+      }
+    }
 }
+
+  process.exit(0);
+}
+
+
 
 export { MafengwoListSpider, MafengwoDetailSpider };
