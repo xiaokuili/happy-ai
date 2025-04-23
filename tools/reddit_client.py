@@ -5,6 +5,9 @@ client_secret = "dqaTnAjMBmjj5Sp6HMSQiss8lbNoFg"
 user_agent = "python:likes:v1.0 (by /u/Individual_Pool1401)"
 subreddit = "r/travelchina"
 
+"""REDDIT API"""
+
+
 class RedditClient:
     def __init__(self, client_id, client_secret, user_agent):
         self.client_id = client_id
