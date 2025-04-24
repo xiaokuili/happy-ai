@@ -35,9 +35,10 @@
       "service_worker": "background.ts"
     },
     "oauth2": {
-      "client_id": "538881266219-7k3ggi1qk62bpauf2bnrdkrhjrrf7p2c.apps.googleusercontent.com",
+      "client_id": "975063754453-5rt2fjsflfi8tfocpbmetl5ldhs1g8bc.apps.googleusercontent.com",
       "scopes": [
-        "https://www.googleapis.com/auth/calendar"
+        "https://www.googleapis.com/auth/calendar",
+        "https://www.googleapis.com/auth/calendar.readonly"
       ]
     }
   }
