@@ -1,10 +1,4 @@
-interface TodoEvent {
-  title: string
-  description?: string
-  startDate: Date
-  endDate: Date
-  priority: 'low' | 'medium' | 'high'
-}
+import type { TodoEvent } from "./types";
 
 export async function addEventToGoogleCalendar(todo: TodoEvent) {
   const event = {
