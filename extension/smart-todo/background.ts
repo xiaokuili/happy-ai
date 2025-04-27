@@ -81,28 +81,3 @@ async function handleNotionPageProcess(pageId: string, tabId?: number) {
     throw error // Re-throw to be handled by the message listener
   }
 }
-
-async function handleAddCalendarEvent(event, sendResponse) {
-  try {
-    const token = await getAuthToken();
-    
-    const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(event)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to add event: ${response.status}`);
-    }
-
-    const data = await response.json();
-    sendResponse({ success: true, data });
-  } catch (error) {
-    console.error('Failed to add calendar event:', error);
-    sendResponse({ success: false, error: error.message });
-  }
-}
