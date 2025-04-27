@@ -11,6 +11,13 @@
             "type": "node-terminal",
             "cwd": "${workspaceFolder}/scrapy"
         },
+        {
+            "command": "npm run process",
+            "name": "Run npm process",
+            "request": "launch",
+            "type": "node-terminal",
+            "cwd": "${workspaceFolder}/scrapy"
+        },
        
     ]
 }
