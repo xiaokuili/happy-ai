@@ -5,7 +5,8 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "process": "ts-node src/process.ts"
   },
   "jest": {
     "preset": "ts-jest",
@@ -16,6 +17,7 @@
   "description": "",
   "devDependencies": {
     "@types/jest": "^29.5.14",
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^22.14.1",
     "@types/user-agents": "^1.0.4",
     "drizzle-kit": "^0.31.0",
@@ -27,6 +29,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.797.0",
     "@libsql/client": "^0.15.4",
     "@mendable/firecrawl-js": "^1.24.0",
     "@types/axios": "^0.9.36",
@@ -36,6 +39,7 @@
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.42.0",
     "https-proxy-agent": "^7.0.6",
+    "jsdom": "^26.1.0",
     "node-fetch": "^2.7.0",
     "playwright-extra": "^4.3.6",
     "playwright-extra-plugin-stealth": "^0.0.1",

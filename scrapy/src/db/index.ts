@@ -73,4 +73,12 @@ const getListByStatus = async (status: string, limit: number = 10) => {
   return await db.select().from(listTable).where(eq(listTable.status, status)).limit(limit);
 }
 
-export { getLastUrl, saveList, saveDetail , db, updateListStatus, getListByStatus};
+const getDetailsByCreatedAt = async (createdAt: string, limit: number = 10, offset: number = 0) => {
+  return await db.select()
+    .from(detailTable)
+    .where(eq(detailTable.createdAt, createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export { getLastUrl, saveList, saveDetail , db, updateListStatus, getListByStatus, getDetailsByCreatedAt};
