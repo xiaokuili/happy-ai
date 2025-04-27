@@ -8,7 +8,6 @@ function IndexPopup() {
     description: "",
     startDate: new Date().toISOString().slice(0, 16),
     endDate: new Date().toISOString().slice(0, 16),
-    priority: "medium"
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,7 +24,6 @@ function IndexPopup() {
         description: "",
         startDate: new Date().toISOString().slice(0, 16),
         endDate: new Date().toISOString().slice(0, 16),
-        priority: "medium"
       })
       alert("Todo added successfully!")
     } catch (error) {
@@ -84,8 +82,7 @@ function IndexPopup() {
           <label htmlFor="priority">Priority</label>
           <select
             id="priority"
-            value={todo.priority}
-            onChange={(e) => setTodo({ ...todo, priority: e.target.value })}
+            onChange={(e) => setTodo({ ...todo})}
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
