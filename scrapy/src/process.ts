@@ -49,25 +49,23 @@ function extractContent(html: string): ContentItem[] {
   return contentList;
 }
 
+function extractSubstring(url: string) {
+  const start = url.indexOf("mafengwo.net/") + 'mafengwo.net/'.length; // 查找 "s16" 的起始索引
+  const end = url.indexOf("CoUBUm");
+
+  return url.substring(start, end); // 提取子字符串
+}
+
 function url2filename(url: string): string {
   // Use base64 encoding for reversible string conversion
-  const buffer = Buffer.from(url);
+  const sub_url = extractSubstring(url);
+
+  const buffer = Buffer.from(sub_url);
   const base64 = buffer.toString('base64');
   // Take first 32 chars of base64 string to keep filename length reasonable
-  const truncated = base64.slice(0, 32);
+  const truncated = base64.slice(0, 64);
   return `./image/${truncated}.jpg`;
 }
-
-function filename2url(filename: string): string {
-  // Extract the base64 portion from filename
-  const base64 = filename.replace('./image/', '').replace('.jpg', '');
-  // Pad the base64 string if needed
-  const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
-  // Convert back to original string
-  const buffer = Buffer.from(paddedBase64, 'base64');
-  return buffer.toString();
-}
-
 
 async function downloadImage(imageUrl: string): Promise<string> {
   try {
@@ -122,7 +120,7 @@ async function uploadToCloudflare(localFilePath: string): Promise<string> {
     const publicUrl = `https://travel.58ac72f971b34aba8c1b6c13f06b0f4f.r2.cloudflarestorage.com/${fileName}`;
     
     // Clean up local file after successful upload
-    await fs.unlink(localFilePath);
+    // await fs.unlink(localFilePath);
     
     return publicUrl;
   } catch (error) {
@@ -183,39 +181,80 @@ function createProgressTracker(totalImages: number) {
     }
   };
 }
+function extractCityFromTitle(title: string): string | null {
+  const validCities = [
+    { en: 'Beijing', cn: '北京' },
+    { en: 'Chengdu', cn: '成都' },
+    { en: 'Chongqing', cn: '重庆' },
+    { en: 'Dalian', cn: '大连' },
+    { en: 'Dunhuang', cn: '敦煌' },
+    { en: 'Guangzhou', cn: '广州' },
+    { en: 'Guilin', cn: '桂林' },
+    { en: 'Hangzhou', cn: '杭州' },
+    { en: 'Huangshan', cn: '黄山' },
+    { en: 'Kunming', cn: '昆明' },
+    { en: 'Lhasa', cn: '拉萨' },
+    { en: 'Lijiang', cn: '丽江' },
+    { en: 'Luoyang', cn: '洛阳' },
+    { en: 'Nanjing', cn: '南京' },
+    { en: 'Qingdao', cn: '青岛' },
+    { en: 'Shanghai', cn: '上海' },
+    { en: 'Shenzhen', cn: '深圳' },
+    { en: 'Suzhou', cn: '苏州' },
+    { en: 'Urumqi', cn: '乌鲁木齐' },
+    { en: 'Wuhan', cn: '武汉' },
+    { en: 'Xiamen', cn: '厦门' },
+    { en: 'Xian', cn: '西安' },
+    { en: 'Zhangjiajie', cn: '张家界' }
+  ];
 
-async function processImages(contentItems: ContentItem[]): Promise<ContentItem[]> {
-  const totalImages = contentItems.filter(item => item.type === 'image').length;
-  const progress = createProgressTracker(totalImages);
+  // Find the first matching city
+  for (const city of validCities) {
+    if (title.includes(city.cn)) {
+      return city.en;
+    }
+  }
+  
+  return null;
+}
+
+
+
+async function processImages(contentItems: ContentItem[]): Promise<{items: ContentItem[], status: 'success' | 'failure'}> {
+
   const processedItems: ContentItem[] = [];
-
   for (const item of contentItems) {
     if (item.type === 'image') {
       const result = await processOneImage(item);
-      if (result.success && result.newSrc) {
+      if (result.success && result.newSrc ) {
+      
         processedItems.push({
           ...item,
           src: result.newSrc
         });
-        progress.increment();
-        progress.logSuccess(item.src!, result.newSrc);
       } else {
-        processedItems.push(item);
-        progress.logFailure(item.src!);
+        return {
+          items: processedItems,
+          status: 'failure',
+        }
       }
     } else {
       processedItems.push(item);
     }
   }
 
-  return processedItems;
+  return {
+    items: processedItems,
+    status: 'success'
+  }
 }
 
-const process = async () => {
-  const details = await getDetailsByCreatedAt('2025-04-23', 10, 0);
-  for (const detail of details.slice(0, 1)) {
-    console.log("Extracting content...");
-    debugger;
+const process = async (limit: number = 10, offset: number = 0) => {
+  console.log(`Processing ${limit} articles from ${offset} to ${offset + limit}`);
+  let failedCount = 0;
+  const details = await getDetailsByCreatedAt('2025-04-23', limit, offset);
+
+  for (const detail of details) {
     const content = extractContent(detail.content);
     
     // 1. Process and track image downloads
@@ -225,20 +264,36 @@ const process = async () => {
     
     // 2. Process images and update content
     let processedCount = 0;
-    const processedContent = await processImages(content);
+    const {status, items: processedContent} = await processImages(content);
+    processedCount ++
+    if (status === 'failure') {
+      failedCount++;
+    } 
+    if (failedCount > 3) {
+      console.log(`Failed to process ${failedCount} images, stopping`);
+      break;
+    }
     
     const result = {
       title: detail.title,
       content: processedContent,
       url: detail.url,
+      city: extractCityFromTitle(detail.title)
     };
     
-    console.log(`Completed processing article: ${detail.title}`);
-    console.log(`Total images processed: ${processedCount}/${totalImages}`);
+    console.log(`${processedCount}/${totalImages} Completed processing article: ${detail.title}`);
     
     // You might want to save the processed result to a database or file here
     console.log(result);
   }
 }
 
+const clearLocalImages = async () => {
+  const localImages = await fs.readdir('./image');
+  for (const image of localImages) {
+    await fs.unlink(`./image/${image}`);
+  }
+}
+
+// clearLocalImages();
 process();
