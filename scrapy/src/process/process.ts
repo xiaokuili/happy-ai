@@ -1,6 +1,6 @@
 import { JSDOM } from 'jsdom';
 
-import { getDetailsByCreatedAt } from './db/index';
+import { getDetailsByCreatedAt } from '../db/index';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
