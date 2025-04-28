@@ -6,6 +6,7 @@ import * as path from 'path';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { createReadStream } from 'fs';
 import { existsSync } from 'fs';
+import { translate,updateArticle } from './api';
 
 interface ContentItem {
   type: 'text' | 'image'| 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
@@ -273,7 +274,11 @@ const process = async (limit: number = 10, offset: number = 0) => {
       console.log(`Failed to process ${failedCount} images, stopping`);
       break;
     }
-    
+    for (const item of processedContent) {
+      if (item.type === 'text') {
+        item.content = await translate(item.content || '');
+      }
+    }
     const result = {
       title: detail.title,
       content: processedContent,
@@ -284,7 +289,9 @@ const process = async (limit: number = 10, offset: number = 0) => {
     console.log(`${processedCount}/${totalImages} Completed processing article: ${detail.title}`);
     
     // You might want to save the processed result to a database or file here
+
     console.log(result);
+    await updateArticle(result);
   }
 }
 
