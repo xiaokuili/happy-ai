@@ -181,25 +181,24 @@ const notionProcessor = {
       }
     })
     
-    // Add mutation observer to detect page changes
+    // Add mutation observer to detect changes in Notion todo blocks
     const observer = new MutationObserver((mutations) => {
-      // Only process mutations that affect the content inside .notion-page-content
-      const notionPageContent = document.querySelector('.notion-page-content');
-      const hasRelevantChanges = mutations.some(mutation => {
-        const target = mutation.target as HTMLElement;
-        // Ignore our UI elements
-        if (target === loadingDiv || 
-            target === notificationDiv ||
-            loadingDiv.contains(target) ||
-            notificationDiv.contains(target)) {
-          return false;
+      // Check if any mutations affect todo blocks
+      const hasTodoChanges = mutations.some(mutation => {
+        // Check if the mutation target or its parents are todo blocks
+        let node = mutation.target as Node;
+        while (node) {
+          if (node.nodeType === Node.ELEMENT_NODE && 
+              (node as Element).classList && 
+              (node as Element).classList.contains('notion-to_do-block')) {
+            return true;
+          }
+          node = node.parentNode;
         }
-        
-        // Check if the mutation happened inside .notion-page-content
-        return notionPageContent && notionPageContent.contains(target);
+        return false;
       });
-
-      if (hasRelevantChanges) {
+      
+      if (hasTodoChanges) {
         const now = Date.now();
         
         // Throttle check
@@ -216,10 +215,12 @@ const notionProcessor = {
       }
     })
 
-    // Start observing changes
+    // Start observing changes in the document
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
+      characterData: true,
+      attributes: true
     })
 
     // Initial processing
