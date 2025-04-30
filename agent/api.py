@@ -1,20 +1,39 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from translate import create_translation_agent
-
+from pydantic import BaseModel
+import uvicorn
 app = FastAPI()
 
 @app.get("/")
 def read_root():
     return {"message": "Hello World"}
 
-# 实现一个翻译的agent 
+class TranslationRequest(BaseModel):
+    text: str
+    source_lang: str = "zh"
+    target_lang: str = "en"
+
 @app.post("/translate")
-def translate(request: Request):
-    data = request.json()
-    agent = create_translation_agent()
-    result = agent.translate(
-        text=data['text'],
-        source_lang=data.get('source_lang', 'zh'),
-        target_lang=data.get('target_lang', 'en')
-    )
-    return {"translation": result}
+async def translate(request: TranslationRequest):
+    """
+    Translate text from source language to target language
+    
+    Args:
+        request (TranslationRequest): Request containing text to translate and language settings
+        
+    Returns:
+        dict: Response containing the translation or error message
+    """
+    try:
+        agent = create_translation_agent()
+        result = agent.translate(
+            text=request.text,
+            source_lang=request.source_lang,
+            target_lang=request.target_lang
+        )
+        return {"translation": result}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

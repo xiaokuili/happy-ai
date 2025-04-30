@@ -6,7 +6,7 @@
     "start": "ts-node src/index.ts",
     "build": "tsc",
     "test": "jest",
-    "process": "ts-node src/process.ts"
+    "process": "ts-node src/process/process.ts"
   },
   "jest": {
     "preset": "ts-jest",
