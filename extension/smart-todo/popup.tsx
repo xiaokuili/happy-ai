@@ -1,50 +1,17 @@
 import "./style.css"
 import { useState, useEffect } from "react"
-import { Storage } from "@plasmohq/storage"
-
-const storage = new Storage()
+import { getYCProjects } from "./storage"
+import type { YCProject } from "./utils/types"
 
 function IndexPopup() {
-    const [projects, setProjects] = useState([]);
+    const [projects, setProjects] = useState<YCProject[]>([]);
 
     useEffect(() => {
         const loadProjects = async () => {
-            const storedProjects = await storage.get("projects")
-            if (!storedProjects) {
-                const defaultProjects = [
-                    {
-                        id: '1',
-                        name: 'YC教练',
-                        stage: 'MVP',
-                        metric: '23/100 周活跃用户',
-                        action: '完成MVP开发,收集用户反馈',
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    },
-                    {
-                        id: '2',
-                        name: 'AI助手工具',
-                        stage: '市场调研',
-                        metric: '15/50 问卷回收',
-                        action: '完成竞品分析报告',
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    },
-                    {
-                        id: '3',
-                        name: '数据分析平台',
-                        stage: '原型设计',
-                        metric: '8/10 功能完成度',
-                        action: '完成核心流程设计',
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    }
-                ]
-                await storage.set("projects", defaultProjects)
-                setProjects(defaultProjects)
-            }
+            const storedProjects = await getYCProjects()
+            console.log("storedProjects", storedProjects)
+            setProjects(storedProjects)
         }
-
         loadProjects()
     }, [])
 
@@ -75,16 +42,12 @@ function IndexPopup() {
                                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                                         {project.name}
                                     </td>
+
                                     <td className="px-6 py-4 text-sm text-gray-500">
-                                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                            {project.stage}
-                                        </span>
+                                        {project.events?.[0]?.metric?.[0]?.name}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-500">
-                                        {project.metric}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">
-                                        {project.action}
+                                        {project.events?.[0]?.title}
                                     </td>
                                 </tr>
                             ))}
