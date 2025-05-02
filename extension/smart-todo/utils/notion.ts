@@ -1,12 +1,12 @@
 import type { TodoEvent } from "./types";
 import { Client } from '@notionhq/client';
-import {
+
+import type {
   ListBlockChildrenResponse,
   BlockObjectResponse,
   PartialBlockObjectResponse,
   ToDoBlockObjectResponse
 } from "@notionhq/client/build/src/api-endpoints";
-
 
 interface NotionLine {
   content: string;
