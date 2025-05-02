@@ -2,21 +2,28 @@ import type { TodoEvent } from "./types";
 export async function addEventToGoogleCalendar(todo: TodoEvent) {
   // 1. 确保已经获取了访问令牌
   const token = await getAccessToken();
+  console.log("todo.endDate", todo.endDate);
+  let endDate = new Date();
+  try {
+    endDate = new Date(todo.endDate);
 
+  } catch (error) {
+    console.error('Error adding event to calendar:', error);
+    endDate = new Date();
+  }
   // 2. 准备事件数据
   const event = {
     summary: todo.title,
     description: `${todo.description || ''}${todo.priority ? `\nPriority: ${todo.priority}` : ''}`,
     start: {
-      dateTime: new Date(todo.startDate).toISOString(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      dateTime: new Date().toISOString(),
+      timeZone: "Asia/Shanghai"  // 指定上海时区
     },
     end: {
-      dateTime: new Date(todo.endDate).toISOString(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      dateTime: new Date().toISOString(),
+      timeZone: "Asia/Shanghai"  // 指定上海时区
     }
   };
-
   try {
     // 检查当天是否已经存在同名事件
     const todoDate = new Date(todo.startDate);
