@@ -10,7 +10,7 @@ import {
 
 interface NotionLine {
   content: string;
-  date: Date;
+  date: string;
   text: string;
 }
 
@@ -40,10 +40,17 @@ export async function getNotionContent(pageId: string): Promise<NotionLine[]> {
       if (isTodoBlock(block)) {
         const todoBlock = block as ToDoBlockObjectResponse;
         const todos = todoBlock.to_do['rich_text'];
+        console.log("Todos:", todos);
+        let todoText = ""
         for (const todo of todos) {
-          const parsedLine = parseNotionLine(todo.plain_text);
-          notionLines.push(parsedLine);
+          if (todo.type == 'mention') {
+            todoText += "@" + todo.plain_text;
+          } else {
+            todoText += todo.plain_text;
+          }
         }
+        const parsedLine = parseNotionLine(todoText);
+        notionLines.push(parsedLine);
       }
     }
 
@@ -61,7 +68,8 @@ export async function handleNotionPage(pageId: string): Promise<TodoEvent[]> {
   // Convert NotionLines to TodoEvents
   const todoEvents = notionLines
     .map(line => createTodoEventFromNotion(line))
-    .filter((event): event is TodoEvent => event !== null);
+    .filter((event): event is TodoEvent => event.title !== null)
+
 
   return todoEvents;
 }
@@ -72,32 +80,19 @@ export async function handleNotionPage(pageId: string): Promise<TodoEvent[]> {
 export function parseNotionLine(line: string): NotionLine {
   const result: NotionLine = {
     content: line,
-    date: new Date(),
+    date: new Date().toISOString(),
     text: line
   };
-
-  // Match @date patterns like "@2024-01-20" or "@2024/01/20" or "@2024.01.20"
-  const datePattern = /@(\d{4}[-./]\d{2}[-./]\d{2})/g;
-  let match;
-
-  while ((match = datePattern.exec(line)) !== null) {
-    // Convert matched date string to Date object
-    const dateStr = match[1].replace(/[./]/g, '-'); // Normalize separators to '-'
-    const date = new Date(dateStr);
-
-    if (!isNaN(date.getTime())) {
-      result.date = date;
-      // Remove the date from text
-      result.text = result.text.replace(match[0], '').trim();
-    }
-  }
+  const parts = line.split('@');
+  result.text = parts[0]?.trim();
+  result.date = parts[1]?.trim();
 
   return result;
 }
 
 export function createTodoEventFromNotion(notionLine: NotionLine): TodoEvent | null {
   if (notionLine.date === null) {
-    notionLine.date = new Date();
+    notionLine.date = new Date().toISOString();
   }
 
 
@@ -105,6 +100,6 @@ export function createTodoEventFromNotion(notionLine: NotionLine): TodoEvent | n
     title: notionLine.text,
     description: notionLine.content,
     startDate: new Date(),
-    endDate: notionLine.date
+    endDate: new Date(notionLine.date)
   };
 }
