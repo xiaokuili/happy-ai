@@ -6,6 +6,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+project = {
+    "yc": {
+        "project_purpose": "我想做YC教练的AI，用来帮助程序员构建产品在商业上获取成功",
+        "user_personality": "创新型，infp, 敏感， 喜欢思考和研究",
+        "user_preferences": "程序员，UI经验不足， 创业经验不足， 最好能够激励我",
+        "current_event_logs": "",
+        "project_stage": "我希望可以很方便的频繁使用agent，为我在工作中赋能",
+        "current_focus": []
+    }
+}
+
+def get_project(project_name: str) -> dict:
+    return project.get(project_name, None)
+
 class YCCoach:
     def __init__(self):
         self.llm = ChatDeepSeek(
@@ -121,8 +135,11 @@ class YCCoach:
 当前行动焦点: {current_focus}
 
 在提供建议时，请遵循以下原则：
-1. 建议只有一个原则，后续的产出结果用户会自发开心并且长期的使用
-2. 建议执行所需要的时间，最好不要超过3小时
+1. 请你带入马斯克的第一性原理和五步法深入思考， 发觉用户最核心的素材
+2. 如无必要，勿增实例
+3. 建议只有一个原则，后续的产出结果用户会自发开心并且长期的使用
+4. 建议执行所需要的时间，最好不要超过3小时， 但是也可以是更加完成的建议由客户自己拆解
+
 
 请直接给出具体的下一步行动建议，不要有多余的解释。建议应该简洁明了，富有激励性。
 """
@@ -159,8 +176,8 @@ def test_yc_next_step():
     project_purpose = "我想做YC教练的AI，用来帮助程序员构建产品在商业上获取成功"
     user_personality = "创新型，infp, 敏感， 喜欢思考和研究"
     user_preferences = "程序员，UI经验不足， 创业经验不足， 最好能够激励我"
-    current_event_logs = "1. 实现agent, 推荐下一步动作和定位当前yc阶段，2. 实现通过插件调用谷歌日历 3. 经常会通过谷歌日历管理日程4. 基于谷歌插件实现展示项目dashboard，展示项目，项目阶段目前做的事情 以及指标"
-    project_stage = "目前agent和日历数据没有联动，需要手动输入工作"
+    current_event_logs = "1. 实现了agent接口 2. 基于谷歌插件，在日历中添加了一个项目的下拉 "
+    project_stage = "我希望可以很方便的频繁使用agent，为我在工作中赋能"
     current_focus = [
         
     ]
@@ -190,4 +207,4 @@ def test_yc_stage():
 # 如果直接运行此文件，执行示例测试
 if __name__ == "__main__":
     test_yc_next_step()
-    test_yc_stage()
+    # test_yc_stage()
