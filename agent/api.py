@@ -43,21 +43,17 @@ async def translate(request: TranslationRequest):
         return {"error": str(e)}, 500
 
 class YCRequest(BaseModel):
-    project_name: str 
-    current_focus: List[str]
+    project_name: str = "default"
+    current_event_logs: str
 
 @app.post("/yc_coach")
 async def yc_coach(request: YCRequest):
     agent = YCCoach()   
     project = get_project(request.project_name)
-    project['current_focus'] = request.current_focus
     result = agent.suggest_next_steps(
         project_purpose=project['project_purpose'],
         user_personality=project['user_personality'],
-        user_preferences=project['user_preferences'],
-        current_event_logs=project['current_event_logs'],
-        project_stage=project['project_stage'],
-        current_focus=project['current_focus']
+        current_event_logs=request.current_event_logs,
     )
 
     return {"message": result}

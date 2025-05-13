@@ -10,25 +10,17 @@ project = {
     "yc": {
         "project_purpose": "我想做YC教练的AI，用来帮助程序员构建产品在商业上获取成功",
         "user_personality": "创新型，infp, 敏感， 喜欢思考和研究",
-        "user_preferences": "程序员，UI经验不足， 创业经验不足， 最好能够激励我",
         "current_event_logs": "",
-        "project_stage": "我希望可以很方便的频繁使用agent，为我在工作中赋能",
-        "current_focus": []
     },
     "travel": {
         "project_purpose": "帮助国外旅客来中国旅游，提供旅游攻略服，并且收费",
         "user_personality": "创新型，infp, 敏感， 喜欢思考和研究， 但是不擅长计划，完美主义，经常删除已经有的作品",
-        "user_preferences": "程序员，nextjs， python 和golang都能写",
         "current_event_logs": "",
-        "project_stage": "",
-        "current_focus": []
     },
     "default": {
         "project_purpose": "",
         "user_personality": "创新型，infp, 敏感， 喜欢思考和研究",
-        "user_preferences": "程序员，UI经验不足， 创业经验不足， 最好能够激励我",
         "current_event_logs": "",
-        "project_stage": "",
     }
 }
 
