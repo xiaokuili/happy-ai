@@ -1,17 +1,31 @@
 FROM python:3.10-slim
 
+# 更换 Debian APT 源为阿里云镜像
+# python:3.10-slim 通常基于 Debian "bookworm" (Debian 12)
+# 确保镜像源列表与您的基础镜像的 Debian 版本和代号匹配
+# 这里我们添加了 main, contrib, non-free, non-free-firmware 组件以提供更全面的包支持
+RUN printf '%s\n' \
+    "deb https://mirrors.aliyun.com/debian/ bookworm main contrib non-free non-free-firmware" \
+    "deb https://mirrors.aliyun.com/debian/ bookworm-updates main contrib non-free non-free-firmware" \
+    "deb https://mirrors.aliyun.com/debian/ bookworm-backports main contrib non-free non-free-firmware" \
+    "deb https://mirrors.aliyun.com/debian-security/ bookworm-security main contrib non-free non-free-firmware" \
+    > /etc/apt/sources.list
+
 WORKDIR /app
 
 # 添加腾讯云 pip 源
 RUN pip config set global.index-url https://mirrors.cloud.tencent.com/pypi/simple
 
-# 安装 ffmpeg
+# 安装 ffmpeg (apt-get update 将使用新的阿里云源)
+# 首先运行 apt-get update 来刷新来自新源的包列表
 RUN apt-get update && \
     apt-get install -y ffmpeg && \
+    # 清理 apt 缓存
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
+# pip install 会使用之前配置的腾讯云源
 RUN pip install --no-cache-dir -r requirements.txt 
 
 COPY . .
