@@ -48,7 +48,8 @@ typing-inspection==0.4.0
 typing_extensions==4.13.2
 urllib3==2.4.0
 uvicorn==0.34.2
-zstandard==0.23.0annotated-types==0.7.0
+zstandard==0.23.0
+annotated-types==0.7.0
 anyio==4.9.0
 beautifulsoup4==4.13.4
 bs4==0.0.2
