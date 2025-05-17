@@ -4,44 +4,12 @@ from typing import List, Optional
 import uvicorn
 import os
 import shutil
-# from movie import MovieGenerator # Assuming you have this
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware # Import CORS
 
-# --- Dummy MovieGenerator for placeholder ---
-class MovieGenerator:
-    def create_video_from_images_and_music(
-        self, image_paths: List[str], output_path: str,
-        music_path: Optional[str] = None, video_duration: Optional[float] = None,
-        image_duration: float = 3.0, fps: int = 24
-    ):
-        # Placeholder: In a real scenario, this would use moviepy or ffmpeg
-        print(f"Generating video with images: {image_paths}")
-        print(f"Music: {music_path}, Output: {output_path}")
-        print(f"Duration: {video_duration}, Image Duration: {image_duration}, FPS: {fps}")
-        
-        # Simulate video creation by creating a dummy file
-        # In a real app, you would actually combine images and audio here.
-        if not image_paths:
-            print("No images provided for video generation.")
-            return None
-            
-        try:
-            # Create a dummy text file representing the video
-            with open(output_path, 'w') as f:
-                f.write(f"This is a dummy video created from:\n")
-                for img_path in image_paths:
-                    f.write(f"- {os.path.basename(img_path)}\n")
-                if music_path:
-                    f.write(f"With music: {os.path.basename(music_path)}\n")
-            
-            print(f"Dummy video file created at {output_path}")
-            return output_path
-        except Exception as e:
-            print(f"Error creating dummy video file: {e}")
-            return None
-# --- End Dummy MovieGenerator ---
+from movie import MovieGenerator
+from yc_coach import YCCoach, get_project
 
 
 # Remove YC Coach parts for this example if not strictly needed for the UI
@@ -53,6 +21,7 @@ app = FastAPI()
 origins = [
     "http://localhost:3000",  # Next.js frontend
     "http://localhost:3001",  # Another potential frontend port
+    "*"
     # Add any other origins as needed
 ]
 
@@ -232,21 +201,20 @@ async def generate_video_endpoint(request: VideoGenerationRequest): # Renamed to
 
 
 # YC Coach - keeping it for completeness from your snippet, but not used in the UI below
-# class YCRequest(BaseModel):
-#     project_name: str = "default"
-#     current_event_logs: str
+class YCRequest(BaseModel):
+    project_name: str = "default"
+    current_event_logs: str
 
-# @app.post("/yc_coach")
-# async def yc_coach(request: YCRequest):
-#     # agent = YCCoach()  
-#     # project = get_project(request.project_name)
-#     # result = agent.suggest_next_steps(
-#     #     project_purpose=project['project_purpose'],
-#     #     user_personality=project['user_personality'],
-#     #     current_event_logs=request.current_event_logs,
-#     # )
-#     # return {"message": result}
-#     return {"message": "YC Coach endpoint hit, but not implemented in this UI example."}
+@app.post("/yc_coach")
+async def yc_coach(request: YCRequest):
+    agent = YCCoach()  
+    project = get_project(request.project_name)
+    result = agent.suggest_next_steps(
+        project_purpose=project['project_purpose'],
+        user_personality=project['user_personality'],
+        current_event_logs=request.current_event_logs,
+    )
+    return {"message": result}
 
 
 if __name__ == "__main__":
