@@ -3,7 +3,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { UploadCloud, Trash2, Film, Image as ImageIcon, Music, Download, XCircle, CheckCircle } from 'lucide-react';
 
-const API_BASE_URL = 'http://124.221.69.225'; // 确保你的后端API地址正确
+const API_BASE_URL = 'https://lingochart.xyz/'; // 确保你的后端API地址正确
 
 interface MediaFile {
   id: string; 
