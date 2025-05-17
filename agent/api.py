@@ -21,7 +21,7 @@ app = FastAPI()
 origins = [
     "http://localhost:3000",  # Next.js frontend
     "http://localhost:3001",  # Another potential frontend port
-    "*"
+    "https://happy-ai-cyan.vercel.app/",
     # Add any other origins as needed
 ]
 
