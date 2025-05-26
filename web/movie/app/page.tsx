@@ -35,58 +35,72 @@ export default function VideoGeneratorPage() {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    const file = files[0];
     setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
 
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const apiMediaType = type; // 'image' or 'music', matches backend endpoint structure
-
     try {
-      const response = await fetch(`${API_BASE_URL}/media/${apiMediaType}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.detail || 'File upload failed');
-      }
-      
-      setSuccessMessage(result.message || `${type} uploaded successfully!`);
-      
-      // 构建新文件对象，并使用 /static 路径以确保图片能正确显示
-      let fileUrl = '';
-      if (result.media_type === 'image') {
-        fileUrl = `${API_BASE_URL}/static/images/${result.filename}`;
-      } else if (result.media_type === 'music') {
-        fileUrl = `${API_BASE_URL}/static/music/${result.filename}`;
-      } else {
-        // Fallback or for other types, though current function only handles image/music
-        fileUrl = `${API_BASE_URL}/media/${result.media_type}/${result.filename}`;
-      }
-      
-      const newFile: MediaFile = {
-        id: result.filename, // Assuming filename is unique enough for id
-        name: result.filename,
-        url: fileUrl,
-        type: result.media_type === 'image' ? 'image' : result.media_type === 'music' ? 'music' : 'video', // Adjust if backend returns other types
-      };
-      
+      // Handle multiple files for images
       if (type === 'image') {
-        setUploadedImages(prev => [...prev, newFile]);
-        // --- 1. 上传图片后默认选择 ---
-        setSelectedImageNames(prev => [...prev, newFile.name]); 
-      } else if (type === 'music') {
-        setUploadedMusic(prev => [...prev, newFile]);
-        // --- 1. 上传音乐后默认选择 ---
-        setSelectedMusicName(newFile.name);
-      } 
+        const uploadPromises = Array.from(files).map(async (file) => {
+          const formData = new FormData();
+          formData.append('file', file);
 
+          const response = await fetch(`${API_BASE_URL}/media/image/upload`, {
+            method: 'POST',
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.detail || 'File upload failed');
+          }
+
+          const fileUrl = `${API_BASE_URL}/static/images/${result.filename}`;
+          
+          return {
+            id: result.filename,
+            name: result.filename,
+            url: fileUrl,
+            type: 'image' as const,
+          };
+        });
+
+        const uploadedFiles = await Promise.all(uploadPromises);
+        setUploadedImages(prev => [...prev, ...uploadedFiles]);
+        setSelectedImageNames(prev => [...prev, ...uploadedFiles.map(file => file.name)]);
+        setSuccessMessage(`${uploadedFiles.length} images uploaded successfully!`);
+      } else {
+        // Handle single music file
+        const file = files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${API_BASE_URL}/media/music/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.detail || 'File upload failed');
+        }
+
+        const fileUrl = `${API_BASE_URL}/static/music/${result.filename}`;
+        
+        const newFile: MediaFile = {
+          id: result.filename,
+          name: result.filename,
+          url: fileUrl,
+          type: 'music',
+        };
+
+        setUploadedMusic(prev => [...prev, newFile]);
+        setSelectedMusicName(newFile.name);
+        setSuccessMessage('Music uploaded successfully!');
+      }
     } catch (err: unknown) {
       const error = err as Error;
       setError(error.message || `Failed to upload ${type}.`);
@@ -171,6 +185,13 @@ export default function VideoGeneratorPage() {
       }
       setGeneratedVideo({ name: result.filename, url: `${API_BASE_URL}${result.url}` }); // Assuming result.url is like /static/videos/filename.mp4
       setSuccessMessage(result.message || 'Video generated successfully!');
+      
+      // Clear images and music after successful generation
+      setUploadedImages([]);
+      setUploadedMusic([]);
+      setSelectedImageNames([]);
+      setSelectedMusicName(null);
+      
     } catch (err: unknown) {
       const error = err as Error;
       setError(error.message || 'Failed to generate video.');
@@ -189,7 +210,7 @@ export default function VideoGeneratorPage() {
             <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">点击上传</span> 或拖拽文件</p>
             <p className="text-xs text-gray-500">{type === 'image' ? 'PNG, JPG, GIF' : type === 'video' ? 'MP4, AVI, MOV' : 'MP3, WAV'}</p>
           </div>
-          <input id={`${type}-dropzone`} type="file" className="hidden" onChange={onChange} accept={type === 'image' ? 'image/*' : type === 'video' ? 'video/*' : 'audio/*'} />
+          <input id={`${type}-dropzone`} type="file" className="hidden" onChange={onChange} accept={type === 'image' ? 'image/*' : type === 'video' ? 'video/*' : 'audio/*'} multiple={type === 'image'} />
         </label>
       </div>
     </div>
